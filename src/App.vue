@@ -29,7 +29,9 @@
 
 <script>
 import axios from "axios";
-axios.defaults.baseURL = "http://127.0.0.1:8000";
+// axios.defaults.baseURL = "http://127.0.0.1:8000";
+axios.defaults.baseURL = "http://127.0.0.1:11000";
+// axios.defaults.baseURL = "http://192.168.1.71:11000";
 export default {
   name: "App",
   components: {},
@@ -38,7 +40,8 @@ export default {
       canvas: null,
       obj: {},
       emptyCanvas: null,
-      result: ""
+      result: "",
+      compositeOperation:null,
     };
   },
   created() {},
@@ -75,9 +78,10 @@ export default {
     // 初始化画笔
     initPen() {
       this.obj.borderWidth = 10;
-      this.obj.writeWidth = 3;
+      this.obj.writeWidth = 20;
       this.obj.borderColor = "#ff6666";
       this.obj.isWriteName = true; //签名模式
+      
     },
     // 初始化画板
     canvasInit() {
@@ -88,17 +92,30 @@ export default {
     // 保存图片
     saveAsImg() {
       let image = new Image();
+      //add background-color
+      this.compositeOperation = this.obj.context.globalCompositeOperation;
+      this.obj.context.globalCompositeOperation = "destination-over";
+      this.obj.context.fillStyle = this.obj.bgColor;
+      this.obj.context.fillRect(0,0,this.obj.canvasWidth,this.obj.canvasHeight);
+
       image.src = this.canvas.toDataURL("image/png");
+
       if (image.src == this.emptyCanvas) {
         alert("请先书写");
       } else {
+        //add background-color
+        
+        // this.obj.context.clearRect(0,0,this.obj.canvasWidth,this.obj.canvasHeight);
+        this.obj.context.putImageData(this.obj.context.getImageData(0, 0,this.obj.canvasWidth,this.obj.canvasHeight), 0,0);
+        this.obj.context.globalCompositeOperation = this.compositeOperation;
+        
         console.log("提交的内容===>", image.src);
         let blob = this.dataURItoBlob(image.src);
         let fd = new FormData();
-        fd.append("fileData", blob); //fileData为自定义
+        fd.append("file", blob); //fileData为自定义
         fd.append("fileName", "123png"); //fileName为自定义，名字随机生成或者写死，看需求
         let options = {
-          url: "/polls",
+          url: "/HRI/hri/",
           data: fd,
           method: "post",
           contentType: false,
@@ -108,7 +125,7 @@ export default {
           .then(result => {
             // console.log('result:',result);
 
-            this.result = result.data.data;
+            this.result = result.data.result;
           })
           .catch(error => {
             this.$notify.error({
