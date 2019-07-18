@@ -1,6 +1,6 @@
 # hwr_web
 
-> A Vue.js project
+> A Vue.js project for hand writing recognition tablet.
 
 ## Build Setup
 
